@@ -24,7 +24,7 @@ st.markdown(
     }
     .block-container {
         max-width: 1480px;
-        padding-top: 1.4rem;
+        padding-top: 5rem !important;
         padding-bottom: 3rem;
     }
     [data-testid="stSidebar"] {
