@@ -74,13 +74,11 @@ return [{ json: { payload: {
                  {"jsCode": "const job = $input.first().json;\nif (['failed','rejected'].includes(job.status)) throw new Error('Review Pulse job did not finish successfully: ' + (job.error || job.status));\nif (job.status !== 'ready' && Date.now() - Date.parse(job.created_at) > 60 * 60 * 1000) throw new Error('Polling timed out after one hour. The durable job may still be running; inspect the app.');\nreturn [{json: job}];"}, 1380, 80)
     ready = node("Report ready", "n8n-nodes-base.if", 2.2,
                  {"conditions": {"options": {"caseSensitive": True, "leftValue": "", "typeValidation": "strict", "version": 2}, "conditions": [{"id": str(uuid.uuid4()), "leftValue": "={{ $json.status }}", "rightValue": "ready", "operator": {"type": "string", "operation": "equals"}}], "combinator": "and"}, "options": {}}, 1590, 80)
-    notify = node("Notify owner - link only", "n8n-nodes-base.gmail", 2.2,
-                  {"resource": "message", "operation": "send", "sendTo": "OWNER@example.invalid", "subject": "Review Pulse: an analysis is ready for your review", "emailType": "text", "message": "={{ 'Your review analysis is ready. Sign in to inspect and approve it:\\n' + $json.report_url + '\\nNo report has been published by this ingestion workflow.' }}", "options": {"appendAttribution": False}}, 1830, -20)
     note = node("Read before activation", "n8n-nodes-base.stickyNote", 1,
-                {"content": "## Ingestion only - no publishing privilege\n- Replace the source and application URL placeholders.\n- Create Header Auth credentials: Name = Authorization; Value = Bearer YOUR_INGEST_API_TOKEN. Select them on Submit and Read Status.\n- Add your source authentication if required.\n- Choose your Gmail account and owner address for the link-only notification. This notification is sent automatically; it does NOT contain the report. Delete this notification node to use execution output only.\n- Workflow timezone: Asia/Kolkata. Monday 09:00.\n- Set question in Normalize and aggregate to request a support answer.\n- Publish after a successful manual test.\n- n8n Cloud must reach your app over HTTPS; localhost is not reachable from the cloud.", "height": 390, "width": 630}, 300, -420)
+                {"content": "## Ingestion only - no publishing privilege\n- Replace the source and application URL placeholders.\n- Create Header Auth credentials: Name = Authorization; Value = Bearer YOUR_INGEST_API_TOKEN. Select them on Submit and Read Status.\n- Add your source authentication if required.\n- This workflow only prepares an analysis; it sends no email and does not append documents or create drafts. Review the report in the app and explicitly approve it before the separate MCP workflow appends the document and creates a Gmail draft.\n- Workflow timezone: Asia/Kolkata. Monday 09:00.\n- Set question in Normalize and aggregate to request a support answer.\n- Publish after a successful manual test.\n- n8n Cloud must reach your app over HTTPS; localhost is not reachable from the cloud.", "height": 390, "width": 630}, 300, -420)
     write("scheduled-ingestion.json", {
-        "name": "Review Pulse | Scheduled ingestion and ready notification", "active": False,
-        "nodes": [schedule, manual, fetch, normalize, submit, wait, poll, guard, ready, notify, note],
+        "name": "Review Pulse | Scheduled ingestion for review", "active": False,
+        "nodes": [schedule, manual, fetch, normalize, submit, wait, poll, guard, ready, note],
         "connections": {
             "Every Monday at 9": {"main": connection("Fetch your review JSON")},
             "Run manually": {"main": connection("Fetch your review JSON")},
@@ -90,7 +88,7 @@ return [{ json: { payload: {
             "Wait before polling": {"main": connection("Read analysis status")},
             "Read analysis status": {"main": connection("Check failure and deadline")},
             "Check failure and deadline": {"main": connection("Report ready")},
-            "Report ready": {"main": [[{"node": "Notify owner - link only", "type": "main", "index": 0}], [{"node": "Wait before polling", "type": "main", "index": 0}]]},
+            "Report ready": {"main": [[], [{"node": "Wait before polling", "type": "main", "index": 0}]]},
         },
         "settings": {"executionOrder": "v1", "timezone": "Asia/Kolkata", "saveDataSuccessExecution": "none", "saveDataErrorExecution": "none", "saveManualExecutions": False}, "pinData": {}, "tags": [],
     })

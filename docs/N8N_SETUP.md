@@ -116,7 +116,7 @@ Body: JSON, using the supplied payload expression
 
 Select the **same ingestion credential** on **Read analysis status**. Do not use `N8N_MCP_TOKEN` or a Google credential in these two HTTP nodes. The response contains a job ID, status URL, and dashboard link. The dashboard itself is open to anyone who can reach it; the token only limits the response when callers choose to authenticate with it.
 
-On **Notify owner - link only**, choose your Gmail credential and replace `OWNER@example.invalid` with your address. This node **sends** a short ready notification automatically; it does not publish or include the report. Remove it to use execution output only.
+The workflow stops when analysis is ready and sends no email. Review and approve the report in the dashboard; only then does the separate MCP publishing workflow append the approved report to the Google Doc and create a Gmail draft.
 
 Run manually first. Once successful, publish the schedule. The workflow polls every minute, stops on failed/rejected jobs, and stops polling after an hour for an unfinished job. A poll timeout does not cancel the durable analysis; inspect the app before resubmitting.
 
@@ -129,8 +129,7 @@ This helper substitutes URLs and the notification recipient before import, but n
 ```bash
 python scripts/render_ingestion.py \
   --app-url https://your-application.example \
-  --source-url https://your-authorized-source.example/reviews \
-  --owner-email you@your-company.example
+  --source-url https://your-authorized-source.example/reviews
 ```
 
 Import the resulting `n8n/configured/scheduled-ingestion.json`, then select credentials inside n8n. That configured folder is ignored by Git.

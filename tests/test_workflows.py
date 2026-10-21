@@ -16,13 +16,14 @@ def test_mcp_workflow_defaults_safe():
     assert all('credentials' not in n for n in workflow['nodes'])
 
 
-def test_ingestion_workflow_does_not_call_approval_api():
+def test_ingestion_workflow_stops_for_human_review():
     text=(ROOT/'n8n/scheduled-ingestion.json').read_text()
     workflow=json.loads(text)
     assert workflow['active'] is False
     assert workflow['settings']['timezone']=='Asia/Kolkata'
     assert '/approve' not in text and 'N8N_MCP_TOKEN' not in text
     nodes={n['name']:n for n in workflow['nodes']}
-    assert nodes['Notify owner - link only']['parameters']['emailType']=='text'
+    assert not any(n['type'].startswith('n8n-nodes-base.gmail') for n in workflow['nodes'])
     assert nodes['Submit analysis job']['parameters']['genericAuthType']=='httpHeaderAuth'
     assert '60 * 60 * 1000' in nodes['Check failure and deadline']['parameters']['jsCode']
+    assert workflow['connections']['Report ready']['main'][0] == []

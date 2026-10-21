@@ -13,7 +13,7 @@ Start locally without API keys. Then connect your own reviews, documentation, mo
 - Local keyword classification or optional Groq/OpenAI-compatible JSON classification. Numerical metrics always come from the accepted dataset, not a model's arithmetic.
 - Support evidence retrieved from your uploaded text/Markdown documents. Returned citations must reference known chunks and contain exact source excerpts; unsupported answers are rejected or withheld.
 - Immutable publishing previews, SHA-256-bound approval, server-configured destinations, a document marker, persisted step status, and manual reconciliation for uncertain writes.
-- Two n8n workflow exports: an authenticated MCP publishing server, and scheduled ingestion with a report-ready notification.
+- Two n8n workflow exports: an authenticated MCP publishing server and scheduled ingestion that stops for human review.
 - Synthetic sample data, Python setup scripts, n8n workflow exports, and automated tests.
 
 This is a **single-owner starter**, not a multi-tenant SaaS product or an independently security-audited production system. Read the deployment and data-handling limits below.
@@ -171,7 +171,7 @@ This token is different from `N8N_MCP_TOKEN`. It can submit jobs and read their 
 
 The source must return review JSON, or replace that node with your source connector and map its rows in **Normalize and aggregate**. That node aggregates the reporting window into one job rather than launching a job per review.
 
-After successful analysis, the final node sends the owner a **link-only notification email**. This optional notification is sent automatically; it is not the reviewed report. Delete that final node to avoid automatic email of any kind. The separate publishing workflow only creates report drafts after approval.
+The scheduled workflow stops when analysis is ready; it sends no email and performs no publishing. Review the report in the dashboard and explicitly approve it. The separate MCP publishing workflow then appends the approved output to the configured document and creates a Gmail draft.
 
 An n8n cloud instance needs a reachable HTTPS deployment; it cannot call the app bound to your laptop's localhost. More setup and HTTP examples: [docs/N8N_SETUP.md](docs/N8N_SETUP.md).
 

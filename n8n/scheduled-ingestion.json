@@ -1,5 +1,5 @@
 {
-  "name": "Review Pulse | Scheduled ingestion and ready notification",
+  "name": "Review Pulse | Scheduled ingestion for review",
   "active": false,
   "nodes": [
     {
@@ -165,27 +165,6 @@
       }
     },
     {
-      "id": "8a5dd35d-f285-488e-ad21-518552a5cfa1",
-      "name": "Notify owner - link only",
-      "type": "n8n-nodes-base.gmail",
-      "typeVersion": 2.2,
-      "position": [
-        1830,
-        -20
-      ],
-      "parameters": {
-        "resource": "message",
-        "operation": "send",
-        "sendTo": "OWNER@example.invalid",
-        "subject": "Review Pulse: an analysis is ready for your review",
-        "emailType": "text",
-        "message": "={{ 'Your review analysis is ready. Sign in to inspect and approve it:\\n' + $json.report_url + '\\nNo report has been published by this ingestion workflow.' }}",
-        "options": {
-          "appendAttribution": false
-        }
-      }
-    },
-    {
       "id": "2cc4f671-903c-4fb2-ab84-7d802aaf423e",
       "name": "Read before activation",
       "type": "n8n-nodes-base.stickyNote",
@@ -195,7 +174,7 @@
         -420
       ],
       "parameters": {
-        "content": "## Ingestion only - no publishing privilege\n- Replace the source and application URL placeholders.\n- Create Header Auth credentials: Name = Authorization; Value = Bearer YOUR_INGEST_API_TOKEN. Select them on Submit and Read Status.\n- Add your source authentication if required.\n- Choose your Gmail account and owner address for the link-only notification. This notification is sent automatically; it does NOT contain the report. Delete this notification node to use execution output only.\n- Workflow timezone: Asia/Kolkata. Monday 09:00.\n- Set question in Normalize and aggregate to request a support answer.\n- Publish after a successful manual test.\n- n8n Cloud must reach your app over HTTPS; localhost is not reachable from the cloud.",
+        "content": "## Ingestion only - no publishing or email\n- Replace the source and application URL placeholders.\n- Create Header Auth credentials: Name = Authorization; Value = Bearer YOUR_INGEST_API_TOKEN. Select them on Submit and Read Status.\n- Add your source authentication if required.\n- This workflow only prepares an analysis; it sends no email and does not append documents or create drafts. Review the report in the app and explicitly approve it before the separate MCP workflow appends the document and creates a Gmail draft.\n- Workflow timezone: Asia/Kolkata. Monday 09:00.\n- Set question in Normalize and aggregate to request a support answer.\n- Publish after a successful manual test.\n- n8n Cloud must reach your app over HTTPS; localhost is not reachable from the cloud.",
         "height": 390,
         "width": 630
       }
@@ -292,13 +271,7 @@
     },
     "Report ready": {
       "main": [
-        [
-          {
-            "node": "Notify owner - link only",
-            "type": "main",
-            "index": 0
-          }
-        ],
+        [],
         [
           {
             "node": "Wait before polling",

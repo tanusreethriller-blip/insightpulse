@@ -54,7 +54,7 @@ Before using real feedback or publishing to a shared destination:
 3. Install `requirements-mcp.txt`, import the supplied workflow, configure accounts, publish, and run `python -m reviewpulse.cli check-mcp`. Confirm precisely the three documented tools and their arguments.
 4. Approve a test report addressed to yourself. Verify one document marker, one correct Gmail draft, and no sent report. Check the returned receipts in the application.
 5. Test failure before writing, failure after a potentially completed write, app restart during an operation, and manual reconciliation. Verify no automatic replay of uncertain writes. Do this only with disposable test destinations.
-6. Execute the ingestion workflow manually from n8n, verify token privileges and report links, then enable the schedule. Check the optional link-only notification separately from publishing.
+6. Execute the ingestion workflow manually from n8n and verify it stops for human review without sending email or publishing. Approve a test report in the dashboard and verify that publishing only appends to the test document and creates a Gmail draft.
 7. Perform a database backup and restore in an isolated instance with publishing disabled. Implement data retention and restore procedures before business use.
 
 A passing local test suite is a starting point, not a substitute for those environment-specific checks or an independent security review.
