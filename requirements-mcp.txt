@@ -1,0 +1,2 @@
+# MCP adapter targets the documented SDK v2.3 API (httpx2, two streams).
+mcp==2.3.0

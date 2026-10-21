@@ -1,0 +1,8 @@
+{
+  "status": "passed",
+  "browser": "Chromium (in-process API bridge; not live network transport)",
+  "screens": "overview, reviews, knowledge, CSV upload, report, approval, activity, mobile",
+  "negative_review_count_label": "105 reviews",
+  "local_effects": 2,
+  "page_errors": []
+}

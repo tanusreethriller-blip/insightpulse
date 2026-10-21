@@ -1,0 +1,8 @@
+# Core app. Python 3.12 or 3.13 recommended.
+fastapi>=0.128.2,<1
+uvicorn>=0.48,<1
+pydantic>=2.13.5,<3
+httpx>=0.28.1,<1
+anyio>=4.13,<5
+python-dotenv>=1.2.2,<2
+tzdata>=2025.2

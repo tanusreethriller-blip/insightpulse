@@ -1,0 +1,23 @@
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+var/
+*.sqlite3*
+*.db*
+__pycache__/
+.pytest_cache/
+*.pyc
+coverage/
+test-results/
+playwright-report/
+n8n/configured/
+# Keep only the intentionally synthetic sample dataset.
+data/*
+!data/synthetic_reviews.csv
+!data/README.md
+private/
+requirements.local.lock.txt
+
+test-output/

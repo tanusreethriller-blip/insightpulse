@@ -1,0 +1,147 @@
+{
+  "name": "Review Pulse | Approved publishing via MCP",
+  "active": false,
+  "nodes": [
+    {
+      "id": "7698495a-c3cd-4d49-9121-5c1756d1bb86",
+      "name": "MCP Server Trigger",
+      "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+      "typeVersion": 2.1,
+      "position": [
+        160,
+        80
+      ],
+      "parameters": {
+        "authentication": "bearerAuth",
+        "path": "review-pulse-publishing"
+      },
+      "webhookId": "d4cdfc18-1a85-4933-9a91-85a55737e512"
+    },
+    {
+      "id": "0aa169e6-52ed-48d9-acb4-872daed19876",
+      "name": "read_doc",
+      "type": "n8n-nodes-base.googleDocsTool",
+      "typeVersion": 2,
+      "position": [
+        -60,
+        320
+      ],
+      "parameters": {
+        "authentication": "oAuth2",
+        "descriptionType": "manual",
+        "toolDescription": "Read the approved destination document and return its documentId and full content. Read-only.",
+        "operation": "get",
+        "documentURL": "={{ $fromAI('document_id', 'Approved Google document ID', 'string') }}",
+        "simple": false
+      }
+    },
+    {
+      "id": "073234b5-d405-4eb0-ac7a-4cd5f381d875",
+      "name": "append_to_doc",
+      "type": "n8n-nodes-base.googleDocsTool",
+      "typeVersion": 2,
+      "position": [
+        160,
+        320
+      ],
+      "parameters": {
+        "authentication": "oAuth2",
+        "descriptionType": "manual",
+        "toolDescription": "Append the exact human-approved report to its approved Google Doc. This writes data.",
+        "operation": "update",
+        "documentURL": "={{ $fromAI('document_id', 'Approved Google document ID', 'string') }}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "object": "text",
+              "action": "insert",
+              "insertSegment": "body",
+              "locationChoice": "endOfSegmentLocation",
+              "text": "={{ $fromAI('entry', 'Exact approved document entry including its marker', 'string') }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "f2777c62-d2b6-441e-bc7f-8f150f4c1f02",
+      "name": "create_email_draft",
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        380,
+        320
+      ],
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Create one Gmail DRAFT with the exact approved recipient, subject, and HTML body. Never send a message.",
+        "resource": "draft",
+        "operation": "create",
+        "subject": "={{ $fromAI('subject', 'Exact approved email subject', 'string') }}",
+        "emailType": "html",
+        "message": "={{ $fromAI('body', 'Exact approved HTML email body', 'string') }}",
+        "options": {
+          "sendTo": "={{ $fromAI('recipient', 'The one approved recipient email address', 'string') }}"
+        }
+      }
+    },
+    {
+      "id": "2bd8de39-3b73-44e4-b45e-18f8378d9500",
+      "name": "Configure before publishing",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -120,
+        -280
+      ],
+      "parameters": {
+        "content": "## Review Pulse publishing tools\n1. Select Bearer credentials on the MCP trigger.\n2. Connect your Google Docs and Gmail OAuth credentials.\n3. Keep tool and parameter names unchanged.\n4. Publish, then copy the Production Streamable HTTP URL into the application .env.\n\nDocument ID and recipient are supplied deterministically from the app's approved configuration, not by an LLM. The MCP token grants write access: keep it private and use a dedicated Google account.\n\nNo AI Agent node is needed. This workflow does not create/send email reports without a client tool call.",
+        "height": 280,
+        "width": 620
+      }
+    }
+  ],
+  "connections": {
+    "read_doc": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "append_to_doc": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create_email_draft": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveManualExecutions": false
+  },
+  "pinData": {},
+  "tags": []
+}

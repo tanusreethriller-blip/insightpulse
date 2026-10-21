@@ -1,0 +1,11 @@
+[
+  {"id":"reliability","name":"Crashes & reliability","keywords":["crash","freeze","frozen","error","broken","bug","blank screen"],"action":"Reproduce the most common failure paths and prioritize a regression test."},
+  {"id":"access","name":"Login & account access","keywords":["login","log in","sign in","password","otp","locked out","verification"],"action":"Inspect authentication failures and test account recovery end to end."},
+  {"id":"billing","name":"Billing & subscriptions","keywords":["bill","charg","subscription","refund","pricing","payment","cancel","fee"],"action":"Review billing evidence and clarify the relevant pricing or cancellation policy."},
+  {"id":"performance","name":"Speed & performance","keywords":["slow","lag","loading","speed","takes forever","timeout"],"action":"Measure the slowest user journeys and investigate performance regressions."},
+  {"id":"integrations","name":"Integrations & exports","keywords":["integrat","export","import","sync","csv","spreadsheet","webhook"],"action":"Reproduce sync and export failures against the affected integration."},
+  {"id":"usability","name":"Navigation & usability","keywords":["confus","navigation","navigate","button","find","interface","dashboard","layout"],"action":"Run a usability review of the reported tasks and improve unclear labels."},
+  {"id":"support","name":"Customer support","keywords":["support","ticket","agent","response","help desk"],"action":"Audit unresolved support cases and improve routing for repeat questions."},
+  {"id":"praise","name":"Positive experience","keywords":["love","excellent","great","easy","helpful","useful","amazing"],"action":"Preserve the experience customers value and investigate opportunities to extend it."},
+  {"id":"other","name":"Other feedback","keywords":[],"action":"Manually review these examples and add a more specific theme when justified."}
+]

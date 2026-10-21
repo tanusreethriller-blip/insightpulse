@@ -1,0 +1,4 @@
+-r requirements.txt
+pytest>=9,<10
+pytest-asyncio>=1,<2
+# Browser smoke tests additionally need playwright and a Chromium installation.

@@ -1,0 +1,7 @@
+{
+  "status": "passed",
+  "transport": "FastAPI TestClient",
+  "flow": "direct dashboard access -> demo -> saved approval -> two local publishing effects",
+  "browser_transport_tested": false,
+  "external_integrations_tested": false
+}

@@ -1,0 +1,321 @@
+{
+  "name": "Review Pulse | Scheduled ingestion and ready notification",
+  "active": false,
+  "nodes": [
+    {
+      "id": "07293336-ac12-439b-9792-a3eeaa0af6bb",
+      "name": "Every Monday at 9",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * 1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "08117d5c-72c0-4d13-bf9b-923a6dafdefb",
+      "name": "Run manually",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        180
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "2da1c124-25e4-4359-9cc7-3fab6b1dc850",
+      "name": "Fetch your review JSON",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        80
+      ],
+      "parameters": {
+        "url": "https://YOUR-DATA-SOURCE.example/reviews",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "5929ae06-26a5-49ff-8883-04e136d8395d",
+      "name": "Normalize and aggregate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        80
+      ],
+      "parameters": {
+        "jsCode": "// Replace field aliases here for your source, or connect Google Sheets rows to this node.\n// Input can be one { reviews: [...] }, one { data: [...] }, or one item per review.\nconst rows = $input.all().flatMap(item => {\n  const value = item.json;\n  if (Array.isArray(value.reviews)) return value.reviews;\n  if (Array.isArray(value.data)) return value.data;\n  return [value];\n});\nif (!rows.length) throw new Error('No reviews were returned by the source');\nconst reviews = rows.map(row => ({\n  text: row.text ?? row.review ?? row.content ?? row.comment,\n  date: row.date ?? row.created_at ?? row.at,\n  rating: row.rating ?? row.score ?? row.stars,\n}));\n// This daily key avoids replaying the same scheduled ingestion. Change it when\n// intentionally submitting changed data/configuration on the same calendar day.\nreturn [{ json: { payload: {\n  name: 'Scheduled customer feedback',\n  idempotency_key: 'scheduled-source1-' + $now.toFormat('yyyy-MM-dd'),\n  question: '',\n  reviews,\n} } }];"
+      }
+    },
+    {
+      "id": "a4296b64-02f7-41d8-bdec-cbfecf244167",
+      "name": "Submit analysis job",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        700,
+        80
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://YOUR-APP.example/api/jobs",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.payload) }}",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "a4eaccf4-80de-4ef5-805e-20c37164c206",
+      "name": "Wait before polling",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        940,
+        80
+      ],
+      "parameters": {
+        "resume": "timeInterval",
+        "amount": 1,
+        "unit": "minutes"
+      },
+      "webhookId": "c9e8508d-85d3-4e9d-b428-90fb34b8730b"
+    },
+    {
+      "id": "54d52a85-9db8-40fe-a726-83dd5486d5eb",
+      "name": "Read analysis status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1160,
+        80
+      ],
+      "parameters": {
+        "url": "={{ $('Submit analysis job').first().json.status_url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "fa8c6b3b-c2d1-4353-bab7-5cd847e42306",
+      "name": "Check failure and deadline",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1380,
+        80
+      ],
+      "parameters": {
+        "jsCode": "const job = $input.first().json;\nif (['failed','rejected'].includes(job.status)) throw new Error('Review Pulse job did not finish successfully: ' + (job.error || job.status));\nif (job.status !== 'ready' && Date.now() - Date.parse(job.created_at) > 60 * 60 * 1000) throw new Error('Polling timed out after one hour. The durable job may still be running; inspect the app.');\nreturn [{json: job}];"
+      }
+    },
+    {
+      "id": "8d4b7b9e-69c4-45c9-9b20-6ac4630b1d1a",
+      "name": "Report ready",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1590,
+        80
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3ce1ad54-e783-4240-82ea-4964fdc0878f",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "ready",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "8a5dd35d-f285-488e-ad21-518552a5cfa1",
+      "name": "Notify owner - link only",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1830,
+        -20
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "OWNER@example.invalid",
+        "subject": "Review Pulse: an analysis is ready for your review",
+        "emailType": "text",
+        "message": "={{ 'Your review analysis is ready. Sign in to inspect and approve it:\\n' + $json.report_url + '\\nNo report has been published by this ingestion workflow.' }}",
+        "options": {
+          "appendAttribution": false
+        }
+      }
+    },
+    {
+      "id": "2cc4f671-903c-4fb2-ab84-7d802aaf423e",
+      "name": "Read before activation",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        300,
+        -420
+      ],
+      "parameters": {
+        "content": "## Ingestion only - no publishing privilege\n- Replace the source and application URL placeholders.\n- Create Header Auth credentials: Name = Authorization; Value = Bearer YOUR_INGEST_API_TOKEN. Select them on Submit and Read Status.\n- Add your source authentication if required.\n- Choose your Gmail account and owner address for the link-only notification. This notification is sent automatically; it does NOT contain the report. Delete this notification node to use execution output only.\n- Workflow timezone: Asia/Kolkata. Monday 09:00.\n- Set question in Normalize and aggregate to request a support answer.\n- Publish after a successful manual test.\n- n8n Cloud must reach your app over HTTPS; localhost is not reachable from the cloud.",
+        "height": 390,
+        "width": 630
+      }
+    }
+  ],
+  "connections": {
+    "Every Monday at 9": {
+      "main": [
+        [
+          {
+            "node": "Fetch your review JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run manually": {
+      "main": [
+        [
+          {
+            "node": "Fetch your review JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch your review JSON": {
+      "main": [
+        [
+          {
+            "node": "Normalize and aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize and aggregate": {
+      "main": [
+        [
+          {
+            "node": "Submit analysis job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Submit analysis job": {
+      "main": [
+        [
+          {
+            "node": "Wait before polling",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait before polling": {
+      "main": [
+        [
+          {
+            "node": "Read analysis status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read analysis status": {
+      "main": [
+        [
+          {
+            "node": "Check failure and deadline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check failure and deadline": {
+      "main": [
+        [
+          {
+            "node": "Report ready",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Report ready": {
+      "main": [
+        [
+          {
+            "node": "Notify owner - link only",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait before polling",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Kolkata",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveManualExecutions": false
+  },
+  "pinData": {},
+  "tags": []
+}

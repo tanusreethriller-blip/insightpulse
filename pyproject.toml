@@ -1,0 +1,13 @@
+[project]
+name = "review-pulse-starter"
+version = "0.1.0"
+description = "Customer review analysis with a browser dashboard and approval-gated n8n MCP publishing"
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 120
