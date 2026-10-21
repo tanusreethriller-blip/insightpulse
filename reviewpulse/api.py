@@ -8,8 +8,7 @@ from urllib.parse import urlsplit
 
 import anyio
 from fastapi import FastAPI, HTTPException, Request, Response
-from fastapi.responses import FileResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 from .config import ROOT, Settings
@@ -244,10 +243,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             message = str(exc) if isinstance(exc, UserError) else "Cannot connect to MCP. Verify the production Streamable HTTP URL, workflow publication, credentials, and token."
             return JSONResponse({"detail": message}, status_code=502)
 
-    app.mount("/static", StaticFiles(directory=ROOT / "reviewpulse" / "static"), name="static")
-
     @app.get("/")
     def index():
-        return FileResponse(ROOT / "reviewpulse" / "static" / "index.html", headers={"Cache-Control": "no-cache"})
+        return {
+            "service": "Review Pulse API",
+            "dashboard": "Run `streamlit run app.py` to open the dashboard.",
+            "health": "/healthz",
+        }
 
     return app

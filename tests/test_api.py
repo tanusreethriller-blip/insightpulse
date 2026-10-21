@@ -7,7 +7,9 @@ def test_dashboard_and_api_are_available_without_login(client):
     assert client.get('/api/jobs').status_code == 200
     assert client.get('/api/sources').status_code == 200
     assert client.post('/api/demo').status_code == 202
-    assert client.get('/').status_code == 200
+    root = client.get('/')
+    assert root.status_code == 200
+    assert 'streamlit run app.py' in root.json()['dashboard']
 
 
 def test_security_headers(client):

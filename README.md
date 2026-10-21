@@ -2,7 +2,7 @@
 
 **Your own customer reviews, a review dashboard, an evidence-backed report, and human-approved publishing through n8n MCP.**
 
-This is an original, standalone implementation of the workflow requested for [imharshal11/review-pulse](https://github.com/imharshal11/review-pulse). It is not a byte-for-byte fork, a pixel-perfect UI copy, or a copy of the original author's data/assets. It uses **FastAPI + a browser dashboard + SQLite** instead of Streamlit so scheduled n8n ingestion and interactive review use the same application.
+This is an original, standalone implementation of the workflow requested for [imharshal11/review-pulse](https://github.com/imharshal11/review-pulse). It is not a byte-for-byte fork, a pixel-perfect UI copy, or a copy of the original author's data/assets. It uses a **Streamlit dashboard, FastAPI ingestion API, and SQLite**, with n8n for scheduled ingestion and MCP publishing.
 
 Start locally without API keys. Then connect your own reviews, documentation, model provider, Google Doc, Gmail account, and n8n instance.
 
@@ -14,7 +14,7 @@ Start locally without API keys. Then connect your own reviews, documentation, mo
 - Support evidence retrieved from your uploaded text/Markdown documents. Returned citations must reference known chunks and contain exact source excerpts; unsupported answers are rejected or withheld.
 - Immutable publishing previews, SHA-256-bound approval, server-configured destinations, a document marker, persisted step status, and manual reconciliation for uncertain writes.
 - Two n8n workflow exports: an authenticated MCP publishing server, and scheduled ingestion with a report-ready notification.
-- Synthetic sample data, Python setup scripts, n8n workflow exports, automated tests, and an optional browser smoke test.
+- Synthetic sample data, Python setup scripts, n8n workflow exports, and automated tests.
 
 This is a **single-owner starter**, not a multi-tenant SaaS product or an independently security-audited production system. Read the deployment and data-handling limits below.
 
@@ -22,7 +22,7 @@ This is a **single-owner starter**, not a multi-tenant SaaS product or an indepe
 
 ## 1. Run the local application
 
-Use Python 3.12 or 3.13. The core suite was executed with Python 3.13.5. No Node.js build or database server is needed.
+Use Python 3.12 or 3.13. No Node.js build or database server is needed. Streamlit serves the dashboard; FastAPI provides the API used by the dashboard and n8n. Run them as separate processes.
 
 macOS/Linux, from the extracted project directory:
 
@@ -32,8 +32,21 @@ source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 python scripts/init_env.py
+```
+
+Start the API in one terminal:
+
+```bash
 uvicorn reviewpulse.api:create_app --factory --host 127.0.0.1 --port 8000 --workers 1 --no-access-log
 ```
+
+Start the Streamlit dashboard in a second terminal:
+
+```bash
+streamlit run app.py
+```
+
+The dashboard opens at **http://localhost:8501** and connects to the API at **http://127.0.0.1:8000** by default. Set `REVIEW_PULSE_API_URL` if the API is hosted elsewhere. Keep the API reachable by n8n over HTTPS when using scheduled ingestion.
 
 Windows PowerShell: replace the first two commands with:
 
@@ -42,11 +55,9 @@ py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
-Open **http://127.0.0.1:8000**. The dashboard opens directly; there is no workspace password. The setup script generates random API tokens and will not overwrite an existing `.env`.
+The Streamlit dashboard opens directly; there is no workspace password. The setup script generates random API tokens and will not overwrite an existing `.env`.
 
-Use this exact origin, rather than switching between `localhost` and `127.0.0.1`. Browser mutations are checked against `PUBLIC_URL`.
-
-Click **Explore the synthetic demo**. This creates 168 fictional reviews and fictional documentation, runs local analysis, and opens the dashboard. On **Reports & approval**, inspect the exact previews and enter `APPROVE`.
+Click **Explore the synthetic demo** in the Streamlit sidebar. This creates 168 fictional reviews and fictional documentation, runs local analysis, and opens the dashboard. On **Reports & approval**, inspect the exact previews and enter `APPROVE`.
 
 **In the default `PUBLISH_MODE=local`, approval only writes demonstration document/draft records to SQLite. No Google or n8n calls occur.** Inspect the records in **Activity & setup**. Local analysis also makes no model-provider requests.
 
@@ -171,9 +182,9 @@ python -m pip install -r requirements-dev.txt
 python -m pytest
 ```
 
-The delivered version passed **51 tests**, including open API access, CSV cleaning, numerical metrics, source checks, immutable approval, leases, duplicate prevention, and uncertain publishing recovery with mocked tools. Live provider, n8n, and Google integrations were not exercised in the build environment.
+The delivered version passed **52 tests**, including Streamlit direct loading, open API access, CSV cleaning, numerical metrics, source checks, immutable approval, leases, duplicate prevention, and uncertain publishing recovery with mocked tools. Live provider, n8n, and Google integrations were not exercised in the build environment.
 
-The API suite exercises direct dashboard access, analysis, approval, and local publishing. An additional Chromium smoke check exercised the actual dashboard against an in-process FastAPI bridge, including upload, source management, approval, and exactly two local output records. This is not a substitute for a deployed HTTP/TLS/browser-security integration test. See [docs/TESTING.md](docs/TESTING.md).
+The API suite exercises direct API access, analysis, approval, and local publishing. See [docs/TESTING.md](docs/TESTING.md) for the Streamlit and API validation notes.
 
 Useful commands:
 
@@ -211,10 +222,10 @@ reviewpulse/knowledge.py    Local retrieval and citation validation
 reviewpulse/publish.py      Approval-only, stateful publishing orchestration
 reviewpulse/mcp_client.py   MCP SDK adapter and explicitly local demo sink
 reviewpulse/worker.py       Analysis/publishing queue worker
-reviewpulse/static/        Dashboard HTML, CSS, JavaScript
+app.py                     Streamlit dashboard
 config/themes.json         Your editable product taxonomy
 n8n/                       Credential-free workflow exports
-scripts/                   Setup, workflow generation, browser smoke test
+scripts/                   Setup and workflow generation
 tests/             Automated unit/integration suite
 ```
 

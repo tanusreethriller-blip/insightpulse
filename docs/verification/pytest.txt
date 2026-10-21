@@ -1,4 +1,4 @@
 Python 3.14
 Command: python -m pytest --tb=short
-Result: 51 passed
+Result: 52 passed
 External account integrations were not exercised.

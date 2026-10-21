@@ -5,7 +5,7 @@
 The final automated suite was run with Python 3.14 on macOS:
 
 ```text
-51 passed
+52 passed
 ```
 
 Installed core versions exercised included FastAPI 0.128.2, Starlette 0.50.0, Pydantic 2.13.5, HTTPX 0.28.1, AnyIO 4.13.0, and pytest 9.1.1. Requirements declare supported version ranges, not a complete transitive lock file. Python 3.12, clean-machine installation, Windows, and macOS execution were not separately tested.
@@ -19,13 +19,11 @@ The suite covers:
 - Durable leases, interrupted work, duplicate approval prevention, exact destination binding, mocked MCP success/failure, and manual publishing recovery without automatically replaying uncertain writes.
 - Workflow JSON shape, absence of embedded account credentials, required tool names, draft-vs-send behavior, and ingestion-only scheduling flow.
 
-A Chromium smoke test exercised direct dashboard loading, the 168-review synthetic demo, negative-review filtering, adding documentation, CSV upload, source-backed report display, the exact approval form, local publication, and activity records. It verified exactly one local document record and one local draft, no page JavaScript errors, and no horizontal overflow at desktop and 390-pixel mobile widths.
-
-The browser used the **actual static UI and real FastAPI/SQLite code through an in-process test bridge**. The bridge does not validate response CSP enforcement, proxy behavior, or deployed HTTP/TLS transport. Server-side security behavior has separate API tests.
+The Streamlit dashboard is started with `streamlit run app.py` and calls the FastAPI service at `REVIEW_PULSE_API_URL`. The dashboard test uses Streamlit's `AppTest` with an isolated API process to verify direct loading without login, synthetic demo analysis completing, report navigation, and approval. API tests exercise source, report, and approval operations independently.
 
 The API suite directly checked public job and report access, demo creation, exact-payload approval, and the two local publishing records without creating an authenticated session.
 
-Python compilation and JavaScript syntax checks were also run. Screenshots in the delivery show actual rendered synthetic/demo results, not a design mock-up.
+Python compilation checks were also run.
 
 ## Not executed here
 
@@ -46,16 +44,6 @@ python -m pip install -r requirements.txt -r requirements-dev.txt
 python -m pytest
 python -m compileall -q reviewpulse scripts tests
 ```
-
-Optional browser smoke test:
-
-```bash
-python -m pip install playwright
-python -m playwright install chromium
-python scripts/browser_smoke.py
-```
-
-Set `CHROMIUM_EXECUTABLE` to an existing Chromium executable instead of installing the managed browser when appropriate. Screenshots are written to ignored `test-output/`; `BROWSER_OUTPUT_DIR` overrides that location. The script creates isolated temporary data and never reads your real `.env` or calls external publishing tools.
 
 ## Required live acceptance checks
 

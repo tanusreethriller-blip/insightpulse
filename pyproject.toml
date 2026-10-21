@@ -1,7 +1,7 @@
 [project]
 name = "review-pulse-starter"
 version = "0.1.0"
-description = "Customer review analysis with a browser dashboard and approval-gated n8n MCP publishing"
+description = "Customer review analysis with a Streamlit dashboard and n8n MCP publishing"
 requires-python = ">=3.12"
 
 [tool.pytest.ini_options]

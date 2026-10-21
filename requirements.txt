@@ -1,4 +1,5 @@
-# Core app. Python 3.12 or 3.13 recommended.
+# Streamlit dashboard and FastAPI ingestion API. Python 3.12 or 3.13 recommended.
+streamlit>=1.41,<2
 fastapi>=0.128.2,<1
 uvicorn>=0.48,<1
 pydantic>=2.13.5,<3
