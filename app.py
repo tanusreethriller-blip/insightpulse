@@ -19,32 +19,49 @@ st.markdown(
     <style>
     .stApp {
         background:
-            radial-gradient(ellipse at 90% 0%, rgba(237, 121, 95, 0.08), transparent 32rem),
+            radial-gradient(ellipse at 92% 2%, rgba(155, 130, 189, 0.12), transparent 34rem),
+            radial-gradient(ellipse at 0% 28%, rgba(237, 121, 95, 0.07), transparent 30rem),
             #f6f7f9;
     }
     .block-container {
         max-width: 1480px;
         padding-top: 7rem !important;
-        padding-bottom: 3rem;
+        padding-bottom: 4rem;
     }
     [data-testid="stSidebar"] {
-        background: rgba(255, 255, 255, 0.88);
+        background: rgba(255, 255, 255, 0.92);
         border-right: 1px solid #e8ebf0;
     }
     [data-testid="stMetric"] {
-        background: #ffffff;
-        border: 1px solid #e8ebf0;
-        border-radius: 16px;
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(145deg, #ffffff, #fbfaff);
+        border: 1px solid #e8e7ef;
+        border-radius: 18px;
         padding: 1rem 1.1rem;
-        box-shadow: 0 5px 18px rgba(39, 49, 61, 0.035);
+        box-shadow: 0 8px 24px rgba(39, 49, 61, 0.055);
+        transition: transform 160ms ease, box-shadow 160ms ease;
+    }
+    [data-testid="stMetric"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 28px rgba(39, 49, 61, 0.09);
+    }
+    [data-testid="stMetric"]::before {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 4px;
+        background: linear-gradient(180deg, #ed795f, #9b82bd);
+        content: "";
     }
     [data-testid="stMetricLabel"] {
         color: #737e8c;
         font-size: 0.82rem;
+        font-weight: 600;
     }
     [data-testid="stMetricValue"] {
         color: #27313d;
         font-weight: 700;
+        letter-spacing: -0.04em;
     }
     [data-testid="stRadio"] > div[role="radiogroup"] {
         justify-content: flex-end;
@@ -70,9 +87,10 @@ st.markdown(
         display: none;
     }
     [data-testid="stRadioOption"][data-selected="true"] {
-        background: #f0eafb;
+        background: linear-gradient(135deg, #f1ebfa, #fff0eb);
         border-color: #d9c9ee;
         color: #684f88;
+        box-shadow: 0 3px 10px rgba(104, 79, 136, 0.1);
     }
     @media (max-width: 760px) {
         [data-testid="stRadio"] > div[role="radiogroup"] {
@@ -98,21 +116,109 @@ st.markdown(
         box-shadow: 0 5px 12px rgba(237, 121, 95, 0.2);
     }
     [data-testid="stVerticalBlockBorderWrapper"] {
-        border-color: #e8ebf0 !important;
-        border-radius: 18px !important;
-        background: rgba(255, 255, 255, 0.78);
+        border-color: #e8e7ef !important;
+        border-radius: 20px !important;
+        background: rgba(255, 255, 255, 0.86);
+        box-shadow: 0 8px 24px rgba(39, 49, 61, 0.035);
     }
     h1, h2, h3 {
         letter-spacing: -0.035em;
     }
     h1 {
         color: #27313d;
-        font-size: 2.25rem !important;
+        font-size: clamp(1.8rem, 3vw, 2.5rem) !important;
+    }
+    h2, h3 {
+        color: #303847;
+    }
+    [data-testid="stDataFrame"] {
+        border: 1px solid #eceaf2;
+        border-radius: 14px;
+        overflow: hidden;
+    }
+    .rp-hero {
+        position: relative;
+        display: flex;
+        min-height: 164px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.5rem;
+        overflow: hidden;
+        margin: .5rem 0 1.25rem;
+        padding: 1.5rem 2rem;
+        border: 1px solid rgba(255, 255, 255, .72);
+        border-radius: 24px;
+        background: linear-gradient(112deg, #fff 0%, #f5f0fb 55%, #fff0eb 100%);
+        box-shadow: 0 14px 34px rgba(70, 56, 89, .08);
+    }
+    .rp-hero-copy {
+        position: relative;
+        z-index: 1;
+        max-width: 620px;
+    }
+    .rp-hero-kicker {
+        margin-bottom: .45rem;
+        color: #896b9e;
+        font-size: .72rem;
+        font-weight: 800;
+        letter-spacing: .13em;
+        text-transform: uppercase;
+    }
+    .rp-hero-title {
+        margin: 0;
+        color: #27313d;
+        font-size: clamp(1.35rem, 2.5vw, 2rem);
+        font-weight: 750;
+        letter-spacing: -.045em;
+        line-height: 1.15;
+    }
+    .rp-hero-detail {
+        margin: .55rem 0 0;
+        color: #687384;
+        font-size: .95rem;
+    }
+    .rp-hero-art {
+        width: min(34%, 270px);
+        min-width: 150px;
+        height: auto;
+        overflow: visible;
+    }
+    .rp-section-kicker {
+        margin: 1.1rem 0 .15rem;
+        color: #896b9e;
+        font-size: .72rem;
+        font-weight: 800;
+        letter-spacing: .12em;
+        text-transform: uppercase;
     }
     div.stButton > button[kind="primary"],
     div.stFormSubmitButton > button[kind="primary"] {
         border-radius: 11px;
         box-shadow: 0 5px 12px rgba(237, 121, 95, 0.16);
+    }
+    div.stButton > button, div.stDownloadButton > button {
+        border-radius: 11px;
+        transition: transform 140ms ease, box-shadow 140ms ease;
+    }
+    div.stButton > button:hover, div.stDownloadButton > button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 15px rgba(39, 49, 61, 0.1);
+    }
+    @media (max-width: 600px) {
+        .rp-hero {
+            min-height: 142px;
+            padding: 1.2rem;
+        }
+        .rp-hero-art {
+            width: 30%;
+            min-width: 100px;
+        }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+            scroll-behavior: auto !important;
+            transition-duration: .01ms !important;
+        }
     }
     </style>
     """,
@@ -268,6 +374,36 @@ def render_overview(job: dict | None) -> None:
 
     result = job["result"]
     metrics = result["metrics"]
+    st.markdown(
+        """
+        <section class="rp-hero" aria-label="Customer feedback insight dashboard">
+          <div class="rp-hero-copy">
+            <div class="rp-hero-kicker">Customer intelligence · review snapshot</div>
+            <p class="rp-hero-title">Listen closely. Move confidently.</p>
+            <p class="rp-hero-detail">A clearer view of what customers value, where they struggle, and what to improve next.</p>
+          </div>
+          <svg class="rp-hero-art" viewBox="0 0 260 120" role="img" aria-label="Decorative feedback trend illustration">
+            <defs>
+              <linearGradient id="pulseLine" x1="0" x2="1">
+                <stop offset="0%" stop-color="#ed795f"/>
+                <stop offset="100%" stop-color="#9b82bd"/>
+              </linearGradient>
+              <linearGradient id="pulseFill" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stop-color="#bba5d2" stop-opacity=".3"/>
+                <stop offset="100%" stop-color="#bba5d2" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d="M8 95 C40 94 39 70 67 72 S95 98 117 62 S146 76 169 47 S203 63 250 18 L250 112 L8 112Z" fill="url(#pulseFill)"/>
+            <path d="M8 95 C40 94 39 70 67 72 S95 98 117 62 S146 76 169 47 S203 63 250 18" fill="none" stroke="url(#pulseLine)" stroke-width="5" stroke-linecap="round"/>
+            <circle cx="67" cy="72" r="5" fill="#fff" stroke="#ed795f" stroke-width="3"/>
+            <circle cx="117" cy="62" r="5" fill="#fff" stroke="#c28cae" stroke-width="3"/>
+            <circle cx="169" cy="47" r="5" fill="#fff" stroke="#a287bf" stroke-width="3"/>
+            <circle cx="250" cy="18" r="6" fill="#fff" stroke="#8e78b0" stroke-width="3"/>
+          </svg>
+        </section>
+        """,
+        unsafe_allow_html=True,
+    )
     a, b, c, d = st.columns(4)
     a.metric("Reviews analyzed", f"{metrics['review_count']:,}")
     b.metric("Average rating", f"{metrics['average_rating']:.2f} / 5")
@@ -278,6 +414,31 @@ def render_overview(job: dict | None) -> None:
         st.warning("Synthetic demonstration data — not real customer feedback.")
 
     themes = metrics["themes"]
+    st.markdown('<div class="rp-section-kicker">At a glance</div>', unsafe_allow_html=True)
+    st.subheader("What customers are saying")
+    sentiment_col, rating_col = st.columns(2)
+    with sentiment_col:
+        with st.container(border=True):
+            st.subheader("Sentiment mix")
+            st.caption("Reviews grouped by star rating: positive (4–5), neutral (3), and negative (1–2).")
+            sentiment = metrics["sentiment"]
+            sentiment_data = pd.DataFrame(
+                {"Reviews": [sentiment["positive"], sentiment["neutral"], sentiment["negative"]]},
+                index=["Positive", "Neutral", "Negative"],
+            )
+            st.bar_chart(sentiment_data, horizontal=True, color="#9b82bd", height=210)
+    with rating_col:
+        with st.container(border=True):
+            st.subheader("Rating distribution")
+            st.caption("Number of reviews at each star rating.")
+            ratings = Counter(review["rating"] for review in result.get("reviews", []))
+            rating_data = pd.DataFrame(
+                {"Reviews": [ratings.get(star, 0) for star in range(1, 6)]},
+                index=[f"{star} star" for star in range(1, 6)],
+            )
+            st.bar_chart(rating_data, horizontal=True, color="#ed795f", height=210)
+
+    st.markdown('<div class="rp-section-kicker">Themes & opportunities</div>', unsafe_allow_html=True)
     st.subheader("Leading themes")
     if themes:
         frame = pd.DataFrame([
@@ -285,12 +446,21 @@ def render_overview(job: dict | None) -> None:
              "Share": f"{theme['share']}%"}
             for theme in themes
         ])
-        st.dataframe(frame, width="stretch", hide_index=True)
         chart = pd.DataFrame(
             {"1–2 star reviews": [theme["negative_count"] for theme in themes]},
             index=[theme["name"] for theme in themes],
         )
-        st.bar_chart(chart)
+        theme_col, details_col = st.columns([1.15, 1])
+        with theme_col:
+            with st.container(border=True):
+                st.subheader("Most-mentioned pain points")
+                st.caption("Low-star reviews by theme.")
+                st.bar_chart(chart, horizontal=True, color="#ed795f", height=320)
+        with details_col:
+            with st.container(border=True):
+                st.subheader("Theme breakdown")
+                st.caption("Share and volume across the leading themes.")
+                st.dataframe(frame, width="stretch", hide_index=True, height=320)
 
     with st.expander("Review explorer"):
         reviews = result.get("reviews", [])
@@ -408,7 +578,9 @@ def render_report(job: dict) -> None:
 
     approval = job.get("approval")
     st.subheader(f"Report · {job['name']}")
-    st.caption(f"Status: {approval['status'] if approval else job['status']}")
+    st.caption(f"Analysis status: {job['status']}")
+    if approval:
+        st.caption(f"Publishing status: {approval['status']}")
     st.markdown(result["report_markdown"])
     st.download_button(
         "Download Markdown",
@@ -416,6 +588,25 @@ def render_report(job: dict) -> None:
         file_name=f"review-pulse-{job['id']}.md",
         mime="text/markdown",
     )
+
+
+def render_approval(job: dict | None) -> None:
+    st.title("Approval")
+    st.caption("Review the report and exact publishing payload before approving any external action.")
+    if job is None:
+        st.info("Upload reviews or start the synthetic demo first.")
+        return
+
+    result = job.get("result")
+    if not result:
+        st.info(f"Analysis status: {job.get('status', 'unknown')} — {job.get('progress', '')}")
+        if job.get("error"):
+            st.error(job["error"])
+        return
+
+    approval = job.get("approval")
+    st.subheader(f"Report · {job['name']}")
+    st.markdown(result["report_markdown"])
     if approval:
         st.info(f"Approval state: {approval['status']}")
         if approval.get("error"):
@@ -545,7 +736,7 @@ st.markdown(
 )
 navigation = st.radio(
     "Navigate",
-    ["Overview", "Upload", "Reports", "Sources", "Activity", "Weekly pulse"],
+    ["Overview", "Upload", "Reports", "Approval", "Sources", "Activity", "Weekly pulse"],
     horizontal=True,
     label_visibility="collapsed",
     key="main_navigation",
@@ -595,11 +786,13 @@ elif navigation == "Upload":
 elif navigation == "Weekly pulse":
     render_weekly_pulse(current_job)
 elif navigation == "Reports":
-    st.title("Reports & approval")
+    st.title("Reports")
     if current_job:
         render_report(current_job)
     else:
         st.info("Upload reviews or start the synthetic demo first.")
+elif navigation == "Approval":
+    render_approval(current_job)
 elif navigation == "Sources":
     render_knowledge()
 else:
