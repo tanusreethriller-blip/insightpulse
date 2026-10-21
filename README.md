@@ -204,6 +204,8 @@ python -m reviewpulse.cli worker
 
 Run the dashboard directly with Python and Uvicorn as shown above. Use n8n Cloud or an independently hosted n8n instance for scheduled ingestion and MCP publishing; Docker is not required by this project. For scheduled ingestion, n8n must be able to reach the application over HTTPS. Set `PUBLIC_URL` to the externally reachable application origin and restart after changes. The app assumes it is served at the origin root, not a URL subpath.
 
+Streamlit Community Cloud hosts the dashboard only; it does not start the FastAPI service. Deploy the API separately, then add `REVIEW_PULSE_API_URL = "https://<your-api-host>"` under the Streamlit app's **Settings → Secrets**. Set the API's `PUBLIC_URL` to the dashboard's HTTPS origin. The API has no login, so do not expose it publicly or use private customer data without adding an access-control layer.
+
 Keep `.env`, SQLite/WAL files, private CSVs, knowledge text, report exports, and backups out of Git and public storage. Run under a dedicated non-root account. Use one web worker and local durable disk; do not put SQLite on a shared network filesystem. There is no SSO, per-user authorization, tenant isolation, automatic retention/erasure workflow, or migration system for a larger SaaS deployment.
 
 If a publishing operation might have succeeded but its response was lost, the application stops at **needs attention**. Inspect Google Docs, Gmail Drafts, and any in-flight n8n execution before using **Reconcile external writes**. Marking an actually completed write as pending can create duplicates. This is deliberately not advertised as an exactly-once distributed transaction.

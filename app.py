@@ -5,10 +5,17 @@ import os
 import httpx
 import pandas as pd
 import streamlit as st
+from streamlit.errors import StreamlitSecretNotFoundError
 
 st.set_page_config(page_title="Review Pulse", page_icon=":material/monitoring:", layout="wide")
 
-API_URL = os.environ.get("REVIEW_PULSE_API_URL", "http://127.0.0.1:8000").rstrip("/")
+try:
+    configured_api_url = st.secrets.get("REVIEW_PULSE_API_URL")
+except StreamlitSecretNotFoundError:
+    configured_api_url = None
+API_URL = (
+    configured_api_url or os.environ.get("REVIEW_PULSE_API_URL") or "http://127.0.0.1:8000"
+).rstrip("/")
 
 
 class ApiError(RuntimeError):
@@ -19,9 +26,16 @@ def api(path: str, method: str = "GET", **kwargs):
     try:
         response = httpx.request(method, API_URL + path, timeout=30, **kwargs)
     except httpx.RequestError as exc:
+        if API_URL.startswith(("http://127.0.0.1", "http://localhost", "http://[::1]")):
+            raise ApiError(
+                "The dashboard is configured for a local API, which is not available to a hosted "
+                "Streamlit app. Deploy the FastAPI service separately and set "
+                "`REVIEW_PULSE_API_URL = \"https://<your-api-host>\"` in Streamlit Cloud → "
+                "App settings → Secrets."
+            ) from exc
         raise ApiError(
-            f"Cannot reach the Review Pulse API at {API_URL}. Start it with "
-            "`uvicorn reviewpulse.api:create_app --factory --host 127.0.0.1 --port 8000`."
+            f"Cannot reach the Review Pulse API at {API_URL}. Confirm the API is running and "
+            "that `REVIEW_PULSE_API_URL` is its reachable HTTPS URL."
         ) from exc
     try:
         data = response.json()
