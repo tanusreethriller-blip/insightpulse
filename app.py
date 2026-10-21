@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import os
+import secrets
+import threading
+import time
 
 import httpx
 import pandas as pd
 import streamlit as st
 from streamlit.errors import StreamlitSecretNotFoundError
+import uvicorn
 
 st.set_page_config(page_title="Review Pulse", page_icon=":material/monitoring:", layout="wide")
 
@@ -16,10 +20,81 @@ except StreamlitSecretNotFoundError:
 API_URL = (
     configured_api_url or os.environ.get("REVIEW_PULSE_API_URL") or "http://127.0.0.1:8000"
 ).rstrip("/")
+DEFAULT_API_URL = "http://127.0.0.1:8000"
 
 
 class ApiError(RuntimeError):
     pass
+
+
+class LocalApiRuntime:
+    def __init__(self):
+        self.lock = threading.Lock()
+        self.server: uvicorn.Server | None = None
+        self.thread: threading.Thread | None = None
+
+    def ensure_started(self) -> None:
+        with self.lock:
+            try:
+                response = httpx.get(API_URL + "/healthz", timeout=1)
+            except httpx.ConnectError:
+                pass
+            except httpx.RequestError as exc:
+                raise ApiError(f"Could not check the local API at {API_URL}: {exc}") from exc
+            else:
+                if response.is_success:
+                    return
+                raise ApiError(
+                    f"The service at {API_URL} returned HTTP {response.status_code}, "
+                    "not an API health response."
+                )
+
+            if self.thread is None or not self.thread.is_alive():
+                if len(os.environ.get("INGEST_API_TOKEN", "")) < 32:
+                    os.environ["INGEST_API_TOKEN"] = secrets.token_urlsafe(32)
+                os.environ.setdefault("PUBLIC_URL", DEFAULT_API_URL)
+                config = uvicorn.Config(
+                    "reviewpulse.api:create_app",
+                    factory=True,
+                    host="127.0.0.1",
+                    port=8000,
+                    workers=1,
+                    access_log=False,
+                )
+                self.server = uvicorn.Server(config)
+                self.thread = threading.Thread(
+                    target=self.server.run,
+                    daemon=True,
+                    name="reviewpulse-api",
+                )
+                self.thread.start()
+
+            deadline = time.monotonic() + 15
+            while time.monotonic() < deadline:
+                if self.thread is None or not self.thread.is_alive():
+                    break
+                try:
+                    response = httpx.get(API_URL + "/healthz", timeout=0.5)
+                    if response.is_success:
+                        return
+                    raise ApiError(
+                        f"The built-in API returned HTTP {response.status_code} during startup."
+                    )
+                except httpx.RequestError:
+                    time.sleep(0.2)
+            raise ApiError(
+                "The built-in API did not become healthy. Check the Streamlit app logs for startup errors."
+            )
+
+
+@st.cache_resource
+def default_api_runtime() -> LocalApiRuntime:
+    return LocalApiRuntime()
+
+
+def start_default_api() -> None:
+    if API_URL == DEFAULT_API_URL:
+        default_api_runtime().ensure_started()
 
 
 def api(path: str, method: str = "GET", **kwargs):
@@ -260,6 +335,7 @@ def render_activity(settings: dict) -> None:
 
 
 try:
+    start_default_api()
     settings = api("/api/me")
     jobs = api("/api/jobs")["jobs"]
 except ApiError as exc:

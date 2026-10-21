@@ -2,7 +2,7 @@
 
 ## Components
 
-The Streamlit process serves the dashboard and calls the separate FastAPI HTTP API. FastAPI also accepts scheduled ingestion from n8n. Both services use the same SQLite database; the API process runs one embedded worker thread that claims queued work, with a separate heartbeat thread renewing leases during long model/MCP calls. Configure a shared persistent `DATA_DIR` and only one API worker.
+The Streamlit process serves the dashboard and calls the FastAPI HTTP API. When the configured API URL is the default loopback URL and unavailable, the dashboard starts Uvicorn in a managed background thread; this works locally and on Streamlit Community Cloud without a separately configured API URL or subprocess. A separately hosted API is still needed for n8n scheduled ingestion. On Streamlit Community Cloud, the built-in API is private to that container and its SQLite data is ephemeral. The API process runs one embedded worker thread that claims queued work, with a separate heartbeat thread renewing leases during long model/MCP calls. Configure a shared persistent `DATA_DIR` and only one API worker.
 
 The optional model provider only classifies reviews and proposes source-backed support statements. It receives no Google credentials, no publishing token, and no publishing tools. Numeric aggregation, quote selection, payload construction, approval checks, and publishing orchestration are ordinary deterministic code.
 
