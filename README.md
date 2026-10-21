@@ -2,7 +2,7 @@
 
 **Your own customer reviews, a review dashboard, an evidence-backed report, and human-approved publishing through n8n MCP.**
 
-This is an original, standalone implementation of the workflow requested for [imharshal11/review-pulse](https://github.com/imharshal11/review-pulse). It is not a byte-for-byte fork, a pixel-perfect UI copy, or a copy of the original author's data/assets. It uses a **Streamlit dashboard, FastAPI ingestion API, and SQLite**, with n8n for scheduled ingestion and MCP publishing.
+This starter uses a **Streamlit dashboard, FastAPI ingestion API, and SQLite**, with n8n for scheduled ingestion and MCP publishing.
 
 Start locally without API keys. Then connect your own reviews, documentation, model provider, Google Doc, Gmail account, and n8n instance.
 
