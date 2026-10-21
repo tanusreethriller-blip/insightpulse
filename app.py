@@ -49,8 +49,8 @@ st.markdown(
     [data-testid="stRadio"] > div[role="radiogroup"] {
         justify-content: flex-end;
         gap: 0.35rem;
-        flex-wrap: nowrap !important;
-        overflow-x: auto;
+        flex-wrap: wrap !important;
+        overflow: visible;
         padding: 0.15rem 0;
     }
     [data-testid="stRadioGroup"] > div {
@@ -73,6 +73,15 @@ st.markdown(
         background: #f0eafb;
         border-color: #d9c9ee;
         color: #684f88;
+    }
+    @media (max-width: 760px) {
+        [data-testid="stRadio"] > div[role="radiogroup"] {
+            justify-content: flex-start;
+        }
+        [data-testid="stRadioOption"] {
+            padding: 0.24rem 0.48rem !important;
+            font-size: 0.88rem;
+        }
     }
     .rp-brandmark {
         display: inline-flex;
@@ -528,17 +537,19 @@ except ApiError as exc:
     show_api_error(exc)
     st.stop()
 
-nav_brand, nav_items = st.columns([0.35, 5.65])
-with nav_brand:
-    st.markdown('<div class="rp-brandmark">RP</div>', unsafe_allow_html=True)
-with nav_items:
-    navigation = st.radio(
-        "Navigate",
-        ["Overview", "Upload", "Reports", "Sources", "Activity", "Weekly pulse"],
-        horizontal=True,
-        label_visibility="collapsed",
-        key="main_navigation",
-    )
+st.markdown(
+    '<div style="display:flex;align-items:center;gap:.7rem;margin-bottom:.25rem">'
+    '<span class="rp-brandmark">RP</span><strong style="font-size:1.2rem;color:#27313d">'
+    'Review Pulse</strong></div>',
+    unsafe_allow_html=True,
+)
+navigation = st.radio(
+    "Navigate",
+    ["Overview", "Upload", "Reports", "Sources", "Activity", "Weekly pulse"],
+    horizontal=True,
+    label_visibility="collapsed",
+    key="main_navigation",
+)
 st.divider()
 
 st.sidebar.markdown("### Review Pulse")
