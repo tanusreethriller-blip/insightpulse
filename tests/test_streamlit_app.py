@@ -61,7 +61,13 @@ def test_streamlit_dashboard_opens_without_login(tmp_path, monkeypatch):
             time.sleep(0.1)
         assert job["status"] == "ready", job.get("error")
         next(button for button in app.button if button.label == "Refresh status").click().run()
-        app.sidebar.radio[0].set_value("Reports & approval").run()
+        app.radio[0].set_value("Weekly pulse").run()
+        assert "Weekly pulse" in [item.value for item in app.title]
+        assert any(item.label == "Top theme" and item.value for item in app.metric)
+        assert {"Rating trend", "Weekly feedback", "What customers talked about"} <= {
+            item.value for item in app.subheader
+        }
+        app.radio[0].set_value("Reports").run()
         assert any("Report · Synthetic demo" in item.value for item in app.subheader)
         next(item for item in app.text_input if item.label == "Type APPROVE to confirm").set_value("APPROVE")
         next(button for button in app.button if button.label == "Approve & publish").click().run()

@@ -8,7 +8,7 @@ Start locally without API keys. Then connect your own reviews, documentation, mo
 
 ## What is included
 
-- Open dashboard: overview, rating trends, sentiment, primary themes, review search/filtering, source library, reports, approval, and activity.
+- Open dashboard: overview, weekly pulse, rating trends, sentiment, primary themes, review search/filtering, source library, reports, approval, and activity.
 - CSV upload and a job API with optional ingestion-token status limits. A durable queue runs analysis outside request handlers; tokens do not restrict the open dashboard.
 - Local keyword classification or optional Groq/OpenAI-compatible JSON classification. Numerical metrics always come from the accepted dataset, not a model's arithmetic.
 - Support evidence retrieved from your uploaded text/Markdown documents. Returned citations must reference known chunks and contain exact source excerpts; unsupported answers are rejected or withheld.

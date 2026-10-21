@@ -4,6 +4,8 @@ import os
 import secrets
 import threading
 import time
+from collections import Counter
+from datetime import date, timedelta
 
 import httpx
 import pandas as pd
@@ -12,6 +14,101 @@ from streamlit.errors import StreamlitSecretNotFoundError
 import uvicorn
 
 st.set_page_config(page_title="Review Pulse", page_icon=":material/monitoring:", layout="wide")
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background:
+            radial-gradient(ellipse at 90% 0%, rgba(237, 121, 95, 0.08), transparent 32rem),
+            #f6f7f9;
+    }
+    .block-container {
+        max-width: 1480px;
+        padding-top: 1.4rem;
+        padding-bottom: 3rem;
+    }
+    [data-testid="stSidebar"] {
+        background: rgba(255, 255, 255, 0.88);
+        border-right: 1px solid #e8ebf0;
+    }
+    [data-testid="stMetric"] {
+        background: #ffffff;
+        border: 1px solid #e8ebf0;
+        border-radius: 16px;
+        padding: 1rem 1.1rem;
+        box-shadow: 0 5px 18px rgba(39, 49, 61, 0.035);
+    }
+    [data-testid="stMetricLabel"] {
+        color: #737e8c;
+        font-size: 0.82rem;
+    }
+    [data-testid="stMetricValue"] {
+        color: #27313d;
+        font-weight: 700;
+    }
+    [data-testid="stRadio"] > div[role="radiogroup"] {
+        justify-content: flex-end;
+        gap: 0.35rem;
+        flex-wrap: nowrap !important;
+        overflow-x: auto;
+        padding: 0.15rem 0;
+    }
+    [data-testid="stRadioGroup"] > div {
+        flex: 0 0 auto !important;
+        width: auto !important;
+        min-width: 0 !important;
+    }
+    [data-testid="stRadioOption"] {
+        border: 1px solid #e8ebf0;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.86);
+        padding: 0.3rem 0.62rem !important;
+        white-space: nowrap;
+        transition: background 120ms ease, border-color 120ms ease;
+    }
+    [data-testid="stRadioOption"] > div > div:first-child {
+        display: none;
+    }
+    [data-testid="stRadioOption"][data-selected="true"] {
+        background: #f0eafb;
+        border-color: #d9c9ee;
+        color: #684f88;
+    }
+    .rp-brandmark {
+        display: inline-flex;
+        width: 2.25rem;
+        height: 2.25rem;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0.8rem;
+        background: #ed795f;
+        color: #ffffff;
+        font-size: 1rem;
+        font-weight: 800;
+        letter-spacing: -0.05em;
+        box-shadow: 0 5px 12px rgba(237, 121, 95, 0.2);
+    }
+    [data-testid="stVerticalBlockBorderWrapper"] {
+        border-color: #e8ebf0 !important;
+        border-radius: 18px !important;
+        background: rgba(255, 255, 255, 0.78);
+    }
+    h1, h2, h3 {
+        letter-spacing: -0.035em;
+    }
+    h1 {
+        color: #27313d;
+        font-size: 2.25rem !important;
+    }
+    div.stButton > button[kind="primary"],
+    div.stFormSubmitButton > button[kind="primary"] {
+        border-radius: 11px;
+        box-shadow: 0 5px 12px rgba(237, 121, 95, 0.16);
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 try:
     configured_api_url = st.secrets.get("REVIEW_PULSE_API_URL")
@@ -203,6 +300,95 @@ def render_overview(job: dict | None) -> None:
         st.dataframe(pd.DataFrame(filtered), width="stretch", hide_index=True)
 
 
+def render_weekly_pulse(job: dict | None) -> None:
+    st.title("Weekly pulse")
+    st.caption("A week-by-week view of customer feedback, ratings, and emerging themes.")
+
+    if job is None or not job.get("result"):
+        st.info("Choose a completed analysis run or start the synthetic demo to see its weekly pulse.")
+        return
+
+    result = job["result"]
+    metrics = result["metrics"]
+    weekly = [week for week in metrics["weekly"] if week["count"] > 0]
+    if not weekly:
+        st.info("There is not enough dated feedback to build a weekly pulse yet.")
+        return
+
+    latest = weekly[-1]
+    week_start = date.fromisoformat(latest["week"])
+    week_end = week_start + timedelta(days=6)
+    prior = next(
+        (week for week in metrics["weekly"] if week["week"] == (week_start - timedelta(days=7)).isoformat()),
+        None,
+    )
+    current_reviews = [
+        review for review in result.get("reviews", [])
+        if week_start <= date.fromisoformat(review["date"]) < week_start + timedelta(days=7)
+    ]
+    theme_counts = Counter(review.get("theme_id") for review in current_reviews if review.get("theme_id"))
+    theme_names = {theme["id"]: theme["name"] for theme in metrics["themes"]}
+    top_theme_id = max(theme_counts, key=lambda theme_id: (theme_counts[theme_id], theme_id)) if theme_counts else None
+    top_theme = theme_names.get(top_theme_id, "Not available")
+    previous_delta = (
+        latest["count"] - prior["count"]
+        if prior and prior["count"] > 0
+        else None
+    )
+
+    st.caption(f"Latest active week · {week_start:%b %d} – {week_end:%b %d, %Y}")
+    a, b, c, d = st.columns(4)
+    a.metric(
+        "Reviews this week",
+        f"{latest['count']:,}",
+        delta=f"{previous_delta:+,} vs prior week" if previous_delta is not None else None,
+    )
+    b.metric("Average rating", f"{latest['average_rating']:.2f} / 5")
+    c.metric("1–2 star reviews", f"{latest['negative']:,}")
+    d.metric("Top theme", top_theme)
+
+    chart_weeks = weekly[-8:]
+    trend_col, volume_col = st.columns([1.5, 1])
+    with trend_col:
+        with st.container(border=True):
+            st.subheader("Rating trend")
+            st.caption("Average star rating by active review week.")
+            ratings = pd.DataFrame(
+                {"Average rating": [week["average_rating"] for week in chart_weeks]},
+                index=[date.fromisoformat(week["week"]).strftime("%b %d") for week in chart_weeks],
+            )
+            st.line_chart(ratings, y="Average rating", color="#9b82bd", height=270)
+    with volume_col:
+        with st.container(border=True):
+            st.subheader("Weekly feedback")
+            st.caption("Review volume and 1–2 star feedback.")
+            counts = pd.DataFrame(
+                {
+                    "All reviews": [week["count"] for week in chart_weeks],
+                    "1–2 star reviews": [week["negative"] for week in chart_weeks],
+                },
+                index=[date.fromisoformat(week["week"]).strftime("%b %d") for week in chart_weeks],
+            )
+            st.bar_chart(counts, height=270, color=["#b7a4ce", "#ed795f"])
+
+    with st.container(border=True):
+        st.subheader("What customers talked about")
+        if theme_counts:
+            theme_rows = [
+                {
+                    "Theme": theme_names.get(theme_id, theme_id),
+                    "Reviews": count,
+                    "Share of this week": f"{count / len(current_reviews) * 100:.0f}%",
+                }
+                for theme_id, count in theme_counts.most_common(5)
+            ]
+            st.dataframe(pd.DataFrame(theme_rows), width="stretch", hide_index=True)
+        else:
+            st.info("Theme details are not available for this week.")
+    if result.get("is_demo"):
+        st.caption("This pulse is based on synthetic demonstration reviews.")
+
+
 def render_report(job: dict) -> None:
     result = job.get("result")
     if not result:
@@ -342,9 +528,21 @@ except ApiError as exc:
     show_api_error(exc)
     st.stop()
 
-st.sidebar.title("Review Pulse")
+nav_brand, nav_items = st.columns([0.35, 5.65])
+with nav_brand:
+    st.markdown('<div class="rp-brandmark">RP</div>', unsafe_allow_html=True)
+with nav_items:
+    navigation = st.radio(
+        "Navigate",
+        ["Overview", "Upload", "Reports", "Sources", "Activity", "Weekly pulse"],
+        horizontal=True,
+        label_visibility="collapsed",
+        key="main_navigation",
+    )
+st.divider()
+
+st.sidebar.markdown("### Review Pulse")
 st.sidebar.caption("Customer feedback analysis")
-navigation = st.sidebar.radio("Navigate", ["Overview", "Upload reviews", "Reports & approval", "Knowledge base", "Activity & n8n"])
 if st.sidebar.button("Explore the synthetic demo", width="stretch"):
     try:
         created = api("/api/demo", "POST")
@@ -380,16 +578,18 @@ else:
 
 if navigation == "Overview":
     render_overview(current_job)
-elif navigation == "Upload reviews":
+elif navigation == "Upload":
     st.title("Upload reviews")
     render_upload()
-elif navigation == "Reports & approval":
+elif navigation == "Weekly pulse":
+    render_weekly_pulse(current_job)
+elif navigation == "Reports":
     st.title("Reports & approval")
     if current_job:
         render_report(current_job)
     else:
         st.info("Upload reviews or start the synthetic demo first.")
-elif navigation == "Knowledge base":
+elif navigation == "Sources":
     render_knowledge()
 else:
     render_activity(settings)
